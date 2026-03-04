@@ -1,0 +1,44 @@
+{
+  "name": "WBA Login",
+  "description": "",
+  "definition": {
+    "nodes": [
+      {
+        "id": "node_1772586661618_1",
+        "type": "trigger",
+        "position": {
+          "x": 496,
+          "y": -128
+        },
+        "data": {
+          "label": "Log in",
+          "config": {}
+        }
+      },
+      {
+        "id": "node_1772586698558_2",
+        "type": "file",
+        "position": {
+          "x": 768,
+          "y": -128
+        },
+        "data": {
+          "label": "File",
+          "config": {
+            "fileType": "json",
+            "operation": "read"
+          }
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "xy-edge__node_1772586661618_1-node_1772586698558_2",
+        "source": "node_1772586661618_1",
+        "target": "node_1772586698558_2"
+      }
+    ]
+  },
+  "variables": {},
+  "tags": []
+}
