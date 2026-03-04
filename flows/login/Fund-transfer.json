@@ -1,0 +1,67 @@
+{
+  "name": "Fund-transfer",
+  "description": "",
+  "definition": {
+    "nodes": [
+      {
+        "id": "node_1772587774414_1",
+        "type": "trigger",
+        "position": {
+          "x": 128,
+          "y": 0
+        },
+        "data": {
+          "label": "Trigger",
+          "config": {}
+        }
+      },
+      {
+        "id": "node_1772587777624_2",
+        "type": "api",
+        "position": {
+          "x": 384,
+          "y": -16
+        },
+        "data": {
+          "label": "REST API",
+          "config": {
+            "method": "GET",
+            "url": "",
+            "headers": {},
+            "timeout": 30000
+          }
+        }
+      },
+      {
+        "id": "node_1772587786414_3",
+        "type": "assertion",
+        "position": {
+          "x": 640,
+          "y": -80
+        },
+        "data": {
+          "label": "Assertion",
+          "config": {
+            "left": "",
+            "operator": "equals",
+            "right": ""
+          }
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "xy-edge__node_1772587774414_1-node_1772587777624_2",
+        "source": "node_1772587774414_1",
+        "target": "node_1772587777624_2"
+      },
+      {
+        "id": "xy-edge__node_1772587777624_2-node_1772587786414_3",
+        "source": "node_1772587777624_2",
+        "target": "node_1772587786414_3"
+      }
+    ]
+  },
+  "variables": {},
+  "tags": []
+}
