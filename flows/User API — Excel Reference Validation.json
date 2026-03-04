@@ -1,0 +1,403 @@
+{
+  "name": "User API — Excel Reference Validation",
+  "description": "Reads expected user data from an Excel file (reference-users.xlsx), calls the JSONPlaceholder /users and /todos public APIs, and cross-validates the API responses against the Excel reference values. Each assertion is a clear failure-injection point: change a value in the Excel or tweak the 'right' side of an assertion to see targeted failures.",
+  "definition": {
+    "nodes": [
+      {
+        "id": "node_trigger",
+        "type": "trigger",
+        "position": {
+          "x": 60,
+          "y": 200
+        },
+        "data": {
+          "label": "Start",
+          "config": {}
+        }
+      },
+      {
+        "id": "node_load_excel",
+        "type": "file",
+        "position": {
+          "x": 300,
+          "y": 200
+        },
+        "data": {
+          "label": "Load Excel Reference Data",
+          "config": {
+            "fileType": "excel",
+            "operation": "read",
+            "filePath": "{{refFile}}",
+            "sheetName": "Users",
+            "captureVar": "refData"
+          }
+        }
+      },
+      {
+        "id": "node_extract_expected",
+        "type": "transform",
+        "position": {
+          "x": 540,
+          "y": 200
+        },
+        "data": {
+          "label": "Extract Expected Values from Excel",
+          "config": {
+            "operations": [
+              {
+                "type": "template",
+                "expression": "{{refData[0].userId}}",
+                "outputVar": "expectedUserId"
+              },
+              {
+                "type": "template",
+                "expression": "{{refData[0].name}}",
+                "outputVar": "expectedName"
+              },
+              {
+                "type": "template",
+                "expression": "{{refData[0].username}}",
+                "outputVar": "expectedUsername"
+              },
+              {
+                "type": "template",
+                "expression": "{{refData[0].email}}",
+                "outputVar": "expectedEmail"
+              },
+              {
+                "type": "template",
+                "expression": "{{refData[0].company}}",
+                "outputVar": "expectedCompany"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "node_get_user",
+        "type": "api",
+        "position": {
+          "x": 780,
+          "y": 200
+        },
+        "data": {
+          "label": "GET User by ID",
+          "config": {
+            "method": "GET",
+            "url": "{{baseUrl}}/users/{{expectedUserId}}",
+            "headers": {
+              "Accept": "application/json"
+            },
+            "captureVar": "user",
+            "timeout": 15000
+          }
+        }
+      },
+      {
+        "id": "node_assert_user_200",
+        "type": "assertion",
+        "position": {
+          "x": 1020,
+          "y": 100
+        },
+        "data": {
+          "label": "Assert GET User → HTTP 200",
+          "config": {
+            "left": "{{statusCode}}",
+            "operator": "equals",
+            "right": "200",
+            "failMessage": "Expected HTTP 200 from GET /users/{{expectedUserId}}, got {{statusCode}}. INJECT FAILURE: change expectedUserId to 999 in Excel to trigger a 404."
+          }
+        }
+      },
+      {
+        "id": "node_assert_user_id",
+        "type": "assertion",
+        "position": {
+          "x": 1020,
+          "y": 300
+        },
+        "data": {
+          "label": "Assert User ID Matches Excel",
+          "config": {
+            "left": "{{user.id}}",
+            "operator": "equals",
+            "right": "{{expectedUserId}}",
+            "failMessage": "Expected {{expectedUserId}} however received {{user.id}}"
+          }
+        }
+      },
+      {
+        "id": "node_extract_actual",
+        "type": "transform",
+        "position": {
+          "x": 1260,
+          "y": 200
+        },
+        "data": {
+          "label": "Extract Actual User Fields",
+          "config": {
+            "operations": [
+              {
+                "type": "template",
+                "expression": "{{user.name}}",
+                "outputVar": "actualName"
+              },
+              {
+                "type": "template",
+                "expression": "{{user.username}}",
+                "outputVar": "actualUsername"
+              },
+              {
+                "type": "template",
+                "expression": "{{user.email}}",
+                "outputVar": "actualEmail"
+              },
+              {
+                "type": "template",
+                "expression": "{{user.company.name}}",
+                "outputVar": "actualCompany"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "node_assert_email_match",
+        "type": "assertion",
+        "position": {
+          "x": 1500,
+          "y": 100
+        },
+        "data": {
+          "label": "Assert Email Matches Excel",
+          "config": {
+            "left": "{{actualEmail}}",
+            "operator": "equals",
+            "right": "{{expectedEmail}}",
+            "failMessage": "Email mismatch: API='{{actualEmail}}', Excel='{{expectedEmail}}'. INJECT FAILURE: change email in Excel to any wrong value."
+          }
+        }
+      },
+      {
+        "id": "node_assert_username_match",
+        "type": "assertion",
+        "position": {
+          "x": 1500,
+          "y": 300
+        },
+        "data": {
+          "label": "Assert Username Matches Excel",
+          "config": {
+            "left": "{{actualUsername}}",
+            "operator": "equals",
+            "right": "{{expectedUsername}}",
+            "failMessage": "Username mismatch: API='{{actualUsername}}', Excel='{{expectedUsername}}'. INJECT FAILURE: change username in Excel to any wrong value."
+          }
+        }
+      },
+      {
+        "id": "node_get_todos",
+        "type": "api",
+        "position": {
+          "x": 1740,
+          "y": 200
+        },
+        "data": {
+          "label": "GET Todos for User",
+          "config": {
+            "method": "GET",
+            "url": "{{baseUrl}}/todos",
+            "queryParams": {
+              "userId": "{{expectedUserId}}"
+            },
+            "headers": {
+              "Accept": "application/json"
+            },
+            "captureVar": "todos",
+            "timeout": 15000
+          }
+        }
+      },
+      {
+        "id": "node_assert_todos_200",
+        "type": "assertion",
+        "position": {
+          "x": 1980,
+          "y": 100
+        },
+        "data": {
+          "label": "Assert GET Todos → HTTP 200",
+          "config": {
+            "left": "{{statusCode}}",
+            "operator": "equals",
+            "right": "200",
+            "failMessage": "Expected HTTP 200 from GET /todos?userId={{expectedUserId}}, got {{statusCode}}."
+          }
+        }
+      },
+      {
+        "id": "node_extract_todo_fields",
+        "type": "transform",
+        "position": {
+          "x": 1980,
+          "y": 300
+        },
+        "data": {
+          "label": "Extract Todo Fields",
+          "config": {
+            "operations": [
+              {
+                "type": "template",
+                "expression": "{{todos.length}}",
+                "outputVar": "todoCount"
+              },
+              {
+                "type": "template",
+                "expression": "{{todos[0].title}}",
+                "outputVar": "firstTodoTitle"
+              },
+              {
+                "type": "template",
+                "expression": "{{todos[0].completed}}",
+                "outputVar": "firstTodoCompleted"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "node_assert_todo_count",
+        "type": "assertion",
+        "position": {
+          "x": 2220,
+          "y": 100
+        },
+        "data": {
+          "label": "Assert User Has Todos",
+          "config": {
+            "left": "{{todoCount}}",
+            "operator": "greaterThan",
+            "right": "0",
+            "failMessage": "User {{expectedUserId}} ({{actualUsername}}) has no todos — expected at least 1. INJECT FAILURE: change right to 999 to simulate a wrong count threshold."
+          }
+        }
+      },
+      {
+        "id": "node_assert_first_todo",
+        "type": "assertion",
+        "position": {
+          "x": 2220,
+          "y": 300
+        },
+        "data": {
+          "label": "Assert First Todo Has Title",
+          "config": {
+            "left": "{{firstTodoTitle}}",
+            "operator": "isNotEmpty",
+            "failMessage": "First todo for user {{expectedUserId}} has an empty title. INJECT FAILURE: change operator to 'isEmpty' to force this assertion to fail."
+          }
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "e01",
+        "source": "node_trigger",
+        "target": "node_load_excel"
+      },
+      {
+        "id": "e02",
+        "source": "node_load_excel",
+        "target": "node_extract_expected"
+      },
+      {
+        "id": "e03",
+        "source": "node_extract_expected",
+        "target": "node_get_user"
+      },
+      {
+        "id": "e04",
+        "source": "node_get_user",
+        "target": "node_assert_user_200"
+      },
+      {
+        "id": "e05",
+        "source": "node_get_user",
+        "target": "node_assert_user_id"
+      },
+      {
+        "id": "e06",
+        "source": "node_assert_user_200",
+        "target": "node_extract_actual"
+      },
+      {
+        "id": "e07",
+        "source": "node_assert_user_id",
+        "target": "node_extract_actual"
+      },
+      {
+        "id": "e08",
+        "source": "node_extract_actual",
+        "target": "node_assert_email_match"
+      },
+      {
+        "id": "e09",
+        "source": "node_extract_actual",
+        "target": "node_assert_username_match"
+      },
+      {
+        "id": "e10",
+        "source": "node_assert_email_match",
+        "target": "node_get_todos"
+      },
+      {
+        "id": "e11",
+        "source": "node_assert_username_match",
+        "target": "node_get_todos"
+      },
+      {
+        "id": "e12",
+        "source": "node_get_todos",
+        "target": "node_assert_todos_200"
+      },
+      {
+        "id": "e13",
+        "source": "node_get_todos",
+        "target": "node_extract_todo_fields"
+      },
+      {
+        "id": "e14",
+        "source": "node_assert_todos_200",
+        "target": "node_assert_todo_count"
+      },
+      {
+        "id": "e15",
+        "source": "node_extract_todo_fields",
+        "target": "node_assert_todo_count"
+      },
+      {
+        "id": "e16",
+        "source": "node_extract_todo_fields",
+        "target": "node_assert_first_todo"
+      }
+    ]
+  },
+  "variables": {
+    "baseUrl": {
+      "value": "https://jsonplaceholder.typicode.com",
+      "secret": false
+    },
+    "refFile": {
+      "value": "reference-users.xlsx",
+      "secret": false
+    }
+  },
+  "tags": [
+    "api",
+    "file",
+    "excel",
+    "jsonplaceholder",
+    "tutorial"
+  ]
+}
